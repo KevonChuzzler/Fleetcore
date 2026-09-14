@@ -1,0 +1,19 @@
+
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fleetcore-db
+    environment:
+      POSTGRES_DB: fleetcore
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: securepassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - fleetcore-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  fleetcore-data:
+    driver: local
