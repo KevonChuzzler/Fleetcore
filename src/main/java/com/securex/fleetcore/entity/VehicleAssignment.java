@@ -1,8 +1,7 @@
 package com.securex.fleetcore.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "VEHICLE_ASSIGNMENT")
@@ -11,32 +10,69 @@ public class VehicleAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "assignment_id")
-    private Long assignmentId; // Stores Assignment ID
+    private Long assignmentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver; // Links to Driver ID
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle; // Links to Vehicle ID[cite: 1]
+    private Vehicle vehicle;
 
-    @NotNull
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "driver_id", nullable = false)
+    private Driver driver;
+
+    // Fixed column name mapping to match the database table
     @Column(name = "assignment_date")
-    private LocalDate assignmentDate; // Stores Assignment Date[cite: 1]
+    private LocalDateTime assignmentDate;
 
-    public VehicleAssignment() {
+    private String status; // e.g., "ACTIVE", "COMPLETED"
+
+    @PrePersist
+    protected void onCreate() {
+        this.assignmentDate = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = "ACTIVE";
+        }
     }
 
-    public Long getAssignmentId() { return assignmentId; }
-    public void setAssignmentId(Long assignmentId) { this.assignmentId = assignmentId; }
+    // --- GETTERS AND SETTERS ---
 
-    public Driver getDriver() { return driver; }
-    public void setDriver(Driver driver) { this.driver = driver; }
+    public Long getAssignmentId() {
+        return assignmentId;
+    }
 
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
+    public void setAssignmentId(Long assignmentId) {
+        this.assignmentId = assignmentId;
+    }
 
-    public LocalDate getAssignmentDate() { return assignmentDate; }
-    public void setAssignmentDate(LocalDate assignmentDate) { this.assignmentDate = assignmentDate; }
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
+
+    public Driver getDriver() {
+        return driver;
+    }
+
+    public void setDriver(Driver driver) {
+        this.driver = driver;
+    }
+
+    public LocalDateTime getAssignmentDate() {
+        return assignmentDate;
+    }
+
+    public void setAssignmentDate(LocalDateTime assignmentDate) {
+        this.assignmentDate = assignmentDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

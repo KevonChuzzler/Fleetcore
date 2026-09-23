@@ -23,6 +23,17 @@
             <version>10.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Google OAuth Client -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client-gson</artifactId>
+            <version>1.44.2</version>
+        </dependency>
 
         <!-- PostgreSQL Database Driver -->
         <dependency>

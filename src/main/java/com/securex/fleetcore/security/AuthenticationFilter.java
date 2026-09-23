@@ -1,5 +1,9 @@
 package com.securex.fleetcore.security;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -7,52 +11,59 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
-import java.io.IOException;
 
-@Provider
+import java.util.Collections;
+
+//@Provider
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
-    private static final String REALM = "Bearer";
+    // You will replace this with your actual Google Cloud Project Client ID
+    private static final String CLIENT_ID = "482782765344-qiptkt00s999f7sc281kbu1pt2u0auo9.apps.googleusercontent.com.apps.googleusercontent.com";
+
+    // Sets up the cryptographic verifier calling out to Google's public keys
+    private final GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+            new NetHttpTransport(),
+            new GsonFactory())
+            .setAudience(Collections.singletonList(CLIENT_ID))
+            .build();
 
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
-        // Skip authentication for login/public endpoints if necessary
-        String path = requestContext.getUriInfo().getPath();
-        if (path.contains("public") || path.contains("login")) {
-            return;
-        }
-
+    public void filter(ContainerRequestContext requestContext) {
+        // 1. Get the Authorization header from the incoming request
         String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith(REALM + " ")) {
-            requestContext.abortWith(
-                Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("Authorization token is required.")
-                        .build()
-            );
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            abortWithUnauthorized(requestContext, "Missing or invalid Authorization header");
             return;
         }
 
-        String token = authorizationHeader.substring(REALM.length()).trim();
+        // 2. Extract the JWT string
+        String token = authorizationHeader.substring("Bearer".length()).trim();
 
         try {
-            validateToken(token);
-            // Future implementation: Extract user role from token and set SecurityContext for RBAC
+            // 3. Cryptographically verify the token with Google
+            GoogleIdToken idToken = verifier.verify(token);
+            
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                
+                // Success! You can now extract user info if needed:
+                // String email = payload.getEmail();
+                // requestContext.setProperty("userEmail", email);
+                
+            } else {
+                abortWithUnauthorized(requestContext, "Invalid Google ID token.");
+            }
         } catch (Exception e) {
-            requestContext.abortWith(
-                Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("Invalid or expired token.")
-                        .build()
-            );
+            abortWithUnauthorized(requestContext, "Token verification failed: " + e.getMessage());
         }
     }
 
-    private void validateToken(String token) throws Exception {
-        // Placeholder for Google OAuth token validation logic
-        // E.g., using GoogleIdTokenVerifier
-        if (token.isEmpty()) {
-            throw new Exception("Token is empty");
-        }
+    private void abortWithUnauthorized(ContainerRequestContext requestContext, String message) {
+        requestContext.abortWith(
+                Response.status(Response.Status.UNAUTHORIZED)
+                        .entity("{\"error\":\"" + message + "\"}")
+                        .build());
     }
 }
