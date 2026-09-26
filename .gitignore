@@ -10,4 +10,7 @@ target/
 .vscode/
 
 # Environment variables
-.env
+.envtarget/
+.idea/
+*.iml
+.vscode/

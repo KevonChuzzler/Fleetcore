@@ -2,40 +2,38 @@ package com.securex.fleetcore.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "MAINTENANCE_RECORD")
+@Table(name = "maintenance_record")
 public class MaintenanceRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "maintenance_id")
-    private Long maintenanceId; // Stores Maintenance ID[cite: 1]
+    private Long maintenanceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle; // Links to Vehicle ID[cite: 1]
+    private Vehicle vehicle;
 
     @NotNull
     @Column(name = "service_date")
-    private LocalDate serviceDate; // Stores Service date[cite: 1]
+    private LocalDate serviceDate;
+
+    private String description;
+
+    @Column(name = "parts_used")
+    private String partsUsed;
 
     @NotNull
-    @Column(name = "maintenance_type")
-    private String maintenanceType; // Stores Maintenance type[cite: 1]
+    private BigDecimal cost;
 
-    @PositiveOrZero
-    @Column(name = "cost")
-    private Double cost; // Stores Cost[cite: 1]
+    @Column(name = "maintenance_status")
+    private String maintenanceStatus; // SCHEDULED, IN_PROGRESS, COMPLETED
 
-    @Column(name = "notes")
-    private String notes; // Stores Notes[cite: 1]
-
-    // Default constructor required by JPA
-    public MaintenanceRecord() {
-    }
+    public MaintenanceRecord() {}
 
     // Getters and Setters
     public Long getMaintenanceId() { return maintenanceId; }
@@ -47,12 +45,15 @@ public class MaintenanceRecord {
     public LocalDate getServiceDate() { return serviceDate; }
     public void setServiceDate(LocalDate serviceDate) { this.serviceDate = serviceDate; }
 
-    public String getMaintenanceType() { return maintenanceType; }
-    public void setMaintenanceType(String maintenanceType) { this.maintenanceType = maintenanceType; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public Double getCost() { return cost; }
-    public void setCost(Double cost) { this.cost = cost; }
+    public String getPartsUsed() { return partsUsed; }
+    public void setPartsUsed(String partsUsed) { this.partsUsed = partsUsed; }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+    public BigDecimal getCost() { return cost; }
+    public void setCost(BigDecimal cost) { this.cost = cost; }
+
+    public String getMaintenanceStatus() { return maintenanceStatus; }
+    public void setMaintenanceStatus(String maintenanceStatus) { this.maintenanceStatus = maintenanceStatus; }
 }

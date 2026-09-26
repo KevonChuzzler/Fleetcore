@@ -1,8 +1,6 @@
-
-
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgis/postgis:15-3.3-alpine
     container_name: fleetcore-db
     environment:
       POSTGRES_DB: fleetcore

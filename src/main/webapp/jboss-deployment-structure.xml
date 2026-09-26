@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.3">
+    <deployment>
+        <dependencies>
+            <!-- Expose WildFly's internal Hibernate Spatial module -->
+            <module name="org.hibernate.spatial" services="import" />
+            <!-- Expose JTS, using optional fallbacks for strict WildFly 41 module names -->
+            <module name="org.locationtech.jts" optional="true" />
+            <module name="org.locationtech.jts.jts-core" optional="true" />
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>
