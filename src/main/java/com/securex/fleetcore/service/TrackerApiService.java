@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class TrackerApiService {
@@ -14,29 +15,23 @@ public class TrackerApiService {
     private EntityManager entityManager;
 
     @Transactional
-    public TrackingEvent processGpsPing(Long vehicleId, Double latitude, Double longitude, Double speedKmh) {
+    public void logEvent(Long vehicleId, Double latitude, Double longitude, Double speed) {
         Vehicle vehicle = entityManager.find(Vehicle.class, vehicleId);
-        
         if (vehicle == null) {
-            throw new IllegalArgumentException("Vehicle not found with ID: " + vehicleId);
+            System.err.println("TrackerApiService: Vehicle " + vehicleId + " not found.");
+            return;
         }
 
-        // 1. Create and save the historical tracking event
         TrackingEvent event = new TrackingEvent();
         event.setVehicle(vehicle);
         event.setLatitude(latitude);
         event.setLongitude(longitude);
-        event.setSpeedKmh(speedKmh);
         
+        // Fixed: Changed from setSpeedKmh to setSpeed to match the TrackingEvent entity
+        event.setSpeed(speed);
+        
+        event.setTimestamp(LocalDateTime.now());
+
         entityManager.persist(event);
-
-        // 2. Update the Vehicle's current state (assuming you want to track real-time status)
-        // If your Vehicle entity has currentLat/currentLng fields, update them here:
-        // vehicle.setCurrentLatitude(latitude);
-        // vehicle.setCurrentLongitude(longitude);
-        // vehicle.setStatus(speedKmh > 0 ? "EN_ROUTE" : "IDLE");
-        // entityManager.merge(vehicle);
-
-        return event;
     }
 }
