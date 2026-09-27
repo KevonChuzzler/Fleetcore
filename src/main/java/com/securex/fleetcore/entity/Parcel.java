@@ -19,16 +19,13 @@ public class Parcel {
 
     private String clientName;
     private String deliveryAddress;
-    
     private Double weightKg;
-    private Double lengthCm;
-    private Double widthCm;
-    private Double heightCm;
+    private String status; // PENDING, ASSIGNED, IN_TRANSIT, DELIVERED
 
+    // Restored coordinate fields for RouteOptimizationService
     private Double latitude;
     private Double longitude;
 
-    // This prevents the infinite JSON loop!
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "dispatch_job_id")
@@ -36,33 +33,67 @@ public class Parcel {
 
     // --- Getters and Setters ---
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getClientName() { return clientName; }
-    public void setClientName(String clientName) { this.clientName = clientName; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getDeliveryAddress() { return deliveryAddress; }
-    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+    public String getClientName() {
+        return clientName;
+    }
 
-    public Double getWeightKg() { return weightKg; }
-    public void setWeightKg(Double weightKg) { this.weightKg = weightKg; }
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
 
-    public Double getLengthCm() { return lengthCm; }
-    public void setLengthCm(Double lengthCm) { this.lengthCm = lengthCm; }
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
 
-    public Double getWidthCm() { return widthCm; }
-    public void setWidthCm(Double widthCm) { this.widthCm = widthCm; }
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
 
-    public Double getHeightCm() { return heightCm; }
-    public void setHeightCm(Double heightCm) { this.heightCm = heightCm; }
+    public Double getWeightKg() {
+        return weightKg;
+    }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public void setWeightKg(Double weightKg) {
+        this.weightKg = weightKg;
+    }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public String getStatus() {
+        return status;
+    }
 
-    public DispatchJob getDispatchJob() { return dispatchJob; }
-    public void setDispatchJob(DispatchJob dispatchJob) { this.dispatchJob = dispatchJob; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public DispatchJob getDispatchJob() {
+        return dispatchJob;
+    }
+
+    public void setDispatchJob(DispatchJob dispatchJob) {
+        this.dispatchJob = dispatchJob;
+    }
 }
