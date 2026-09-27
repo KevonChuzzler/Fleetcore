@@ -1,9 +1,17 @@
 package com.securex.fleetcore.controller;
 
-import com.securex.fleetcore.dao.DriverDAO;
 import com.securex.fleetcore.entity.Driver;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
@@ -13,50 +21,45 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class DriverController {
 
-    @Inject
-    private DriverDAO driverDAO;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @GET
     public List<Driver> getAllDrivers() {
-        return driverDAO.findAll(); // Retrieves driver profiles and assignment info[cite: 1]
-    }
-
-    @GET
-    @Path("/{id}")
-    public Response getDriverById(@PathParam("id") Long id) {
-        Driver driver = driverDAO.findById(id);
-        if (driver == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        return Response.ok(driver).build();
+        return entityManager.createQuery("SELECT d FROM Driver d", Driver.class).getResultList();
     }
 
     @POST
-    public Response createDriver(Driver driver) {
-        driverDAO.create(driver); // Stores and manages driver information[cite: 1]
+    @Transactional
+    public Response addDriver(Driver driver) {
+        entityManager.persist(driver);
         return Response.status(Response.Status.CREATED).entity(driver).build();
     }
 
     @PUT
     @Path("/{id}")
+    @Transactional
     public Response updateDriver(@PathParam("id") Long id, Driver updatedDriver) {
-        Driver existingDriver = driverDAO.findById(id);
-        if (existingDriver == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        Driver existing = entityManager.find(Driver.class, id);
+        if (existing == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Driver not found").build();
         }
-        updatedDriver.setDriverId(id);
-        driverDAO.update(updatedDriver);
+        
+        updatedDriver.setId(id);
+        entityManager.merge(updatedDriver);
+        
         return Response.ok(updatedDriver).build();
     }
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     public Response deleteDriver(@PathParam("id") Long id) {
-        Driver existingDriver = driverDAO.findById(id);
-        if (existingDriver == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        Driver existing = entityManager.find(Driver.class, id);
+        if (existing != null) {
+            entityManager.remove(existing);
+            return Response.noContent().build();
         }
-        driverDAO.delete(id);
-        return Response.noContent().build();
+        return Response.status(Response.Status.NOT_FOUND).entity("Driver not found").build();
     }
 }

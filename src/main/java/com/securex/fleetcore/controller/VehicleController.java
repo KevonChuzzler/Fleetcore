@@ -1,5 +1,6 @@
 package com.securex.fleetcore.controller;
 
+import com.securex.fleetcore.entity.Driver;
 import com.securex.fleetcore.entity.Vehicle;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -45,11 +46,27 @@ public class VehicleController {
             return Response.status(Response.Status.NOT_FOUND).entity("Vehicle not found").build();
         }
         
-        // The fix: Changed setVehicleId to setId to match the entity
         updatedVehicle.setId(id);
         entityManager.merge(updatedVehicle);
         
         return Response.ok(updatedVehicle).build();
+    }
+
+    // New Endpoint: Assigns a Driver to a Vehicle
+    @PUT
+    @Path("/{id}/driver/{driverId}")
+    @Transactional
+    public Response assignDriver(@PathParam("id") Long vehicleId, @PathParam("driverId") Long driverId) {
+        Vehicle vehicle = entityManager.find(Vehicle.class, vehicleId);
+        Driver driver = entityManager.find(Driver.class, driverId);
+        
+        if (vehicle == null || driver == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Vehicle or Driver not found").build();
+        }
+        
+        vehicle.setDriver(driver);
+        entityManager.merge(vehicle);
+        return Response.ok(vehicle).build();
     }
 
     @DELETE

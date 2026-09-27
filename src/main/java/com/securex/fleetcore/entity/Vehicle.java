@@ -1,10 +1,13 @@
 package com.securex.fleetcore.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
@@ -25,6 +28,11 @@ public class Vehicle {
     private Double mileage;
     private String status;
 
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<TrackingEvent> trackingEvents;
 
@@ -92,6 +100,14 @@ public class Vehicle {
     
     public void setStatus(String status) { 
         this.status = status; 
+    }
+
+    public Driver getDriver() { 
+        return driver; 
+    }
+    
+    public void setDriver(Driver driver) { 
+        this.driver = driver; 
     }
 
     public List<TrackingEvent> getTrackingEvents() { 
