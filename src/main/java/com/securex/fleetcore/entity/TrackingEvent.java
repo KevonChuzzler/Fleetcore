@@ -1,69 +1,58 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.json.bind.annotation.JsonbTransient;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "TRACKING_EVENT")
+@Table(name = "tracking_events")
 public class TrackingEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "event_id")
-    private Long eventId;
+    private Long id;
 
-    // @JsonbTransient STOPS the serializer from choking on the Hibernate proxy
-    @JsonbTransient
-    @ManyToOne(fetch = FetchType.LAZY)
+    private Double latitude;
+    private Double longitude;
+    private Double speedKmh;
+    private LocalDateTime timestamp;
+
+    @JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    private Double latitude;
-    
-    private Double longitude;
-    
-    private LocalDateTime timestamp;
-
-    // --- GETTERS AND SETTERS ---
-
-    public Long getEventId() {
-        return eventId;
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
     }
 
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
+    // --- Getters and Setters ---
 
-    public Vehicle getVehicle() {
-        return vehicle;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setVehicle(Vehicle vehicle) {
-        this.vehicle = vehicle;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public Double getLatitude() {
-        return latitude;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
+    public Double getSpeedKmh() { return speedKmh; }
+    public void setSpeedKmh(Double speedKmh) { this.speedKmh = speedKmh; }
 
-    public Double getLongitude() {
-        return longitude;
-    }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+    public Vehicle getVehicle() { return vehicle; }
+    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
 }

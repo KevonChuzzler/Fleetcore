@@ -1,40 +1,42 @@
 package com.securex.fleetcore.service;
 
+import com.securex.fleetcore.entity.TrackingEvent;
+import com.securex.fleetcore.entity.Vehicle;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.logging.Logger;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class TrackerApiService {
 
-    private static final Logger LOGGER = Logger.getLogger(TrackerApiService.class.getName());
-    private static final String TRACKER_API_URL = "https://api.external-tracker.com/v1/vehicles/"; // Replace with actual API provider
-    private static final String API_KEY = System.getenv("TRACKER_API_KEY");
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
-
-    public String fetchLatestLocation(String vehicleRegistration) {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(TRACKER_API_URL + vehicleRegistration + "/location"))
-                    .header("Authorization", "Bearer " + API_KEY)
-                    .header("Accept", "application/json")
-                    .GET()
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
-            if (response.statusCode() == 200) {
-                return response.body(); // Returns JSON containing latitude, longitude, and timestamp
-            } else {
-                LOGGER.warning("Failed to fetch GPS data. HTTP Status: " + response.statusCode());
-            }
-        } catch (Exception e) {
-            LOGGER.severe("Error calling Tracker API: " + e.getMessage());
+    @Transactional
+    public TrackingEvent processGpsPing(Long vehicleId, Double latitude, Double longitude, Double speedKmh) {
+        Vehicle vehicle = entityManager.find(Vehicle.class, vehicleId);
+        
+        if (vehicle == null) {
+            throw new IllegalArgumentException("Vehicle not found with ID: " + vehicleId);
         }
-        return null;
+
+        // 1. Create and save the historical tracking event
+        TrackingEvent event = new TrackingEvent();
+        event.setVehicle(vehicle);
+        event.setLatitude(latitude);
+        event.setLongitude(longitude);
+        event.setSpeedKmh(speedKmh);
+        
+        entityManager.persist(event);
+
+        // 2. Update the Vehicle's current state (assuming you want to track real-time status)
+        // If your Vehicle entity has currentLat/currentLng fields, update them here:
+        // vehicle.setCurrentLatitude(latitude);
+        // vehicle.setCurrentLongitude(longitude);
+        // vehicle.setStatus(speedKmh > 0 ? "EN_ROUTE" : "IDLE");
+        // entityManager.merge(vehicle);
+
+        return event;
     }
 }

@@ -1,61 +1,58 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "trip_expense")
+@Table(name = "trip_expenses")
 public class TripExpense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expense_id")
-    private Long expenseId;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    private String category; // e.g., TOLL, MAINTENANCE, ACCOMMODATION, MISC
+    private Double amount;
+    private String description;
+    private LocalDate date;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver;
+    @PrePersist
+    protected void onCreate() {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+    }
 
-    @NotNull
-    @Column(name = "expense_date")
-    private LocalDate expenseDate;
+    // --- Getters and Setters ---
 
-    @NotNull
-    @Column(name = "expense_type")
-    private String expenseType; // e.g., TOLL, MEAL, LODGING, PARKING, OTHER
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    @NotNull
-    private BigDecimal amount;
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    private String description;
-
-    public TripExpense() {}
-
-    // Getters and Setters
-    public Long getExpenseId() { return expenseId; }
-    public void setExpenseId(Long expenseId) { this.expenseId = expenseId; }
-
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
-
-    public Driver getDriver() { return driver; }
-    public void setDriver(Driver driver) { this.driver = driver; }
-
-    public LocalDate getExpenseDate() { return expenseDate; }
-    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }
-
-    public String getExpenseType() { return expenseType; }
-    public void setExpenseType(String expenseType) { this.expenseType = expenseType; }
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
+
+    public Vehicle getVehicle() { return vehicle; }
+    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
 }

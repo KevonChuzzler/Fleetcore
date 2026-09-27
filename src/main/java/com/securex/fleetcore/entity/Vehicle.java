@@ -1,110 +1,104 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.List;
 
 @Entity
-@Table(name = "VEHICLE")
+@Table(name = "vehicles")
 public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "vehicle_id")
-    private Long vehicleId;
+    private Long id;
 
-    @Column(name = "registration_number")
     private String registrationNumber;
-
     private String make;
-    
     private String model;
-
-    @Column(name = "vehicle_type")
     private String vehicleType;
-
     private Integer year;
-
-    private Integer mileage;
-    
+    private Double mileage;
     private String status;
 
-    // @JsonbTransient STOPS the infinite JSON loop when fetching tracking data
-    @JsonbTransient
-    @OneToMany(mappedBy = "vehicle")
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
     private List<TrackingEvent> trackingEvents;
 
-    // --- GETTERS AND SETTERS ---
+    // --- Getters and Setters ---
 
-    public Long getVehicleId() {
-        return vehicleId;
+    public Long getId() { 
+        return id; 
+    }
+    
+    public void setId(Long id) { 
+        this.id = id; 
     }
 
-    public void setVehicleId(Long vehicleId) {
-        this.vehicleId = vehicleId;
+    public String getRegistrationNumber() { 
+        return registrationNumber; 
+    }
+    
+    public void setRegistrationNumber(String registrationNumber) { 
+        this.registrationNumber = registrationNumber; 
     }
 
-    public String getRegistrationNumber() {
-        return registrationNumber;
+    public String getMake() { 
+        return make; 
+    }
+    
+    public void setMake(String make) { 
+        this.make = make; 
     }
 
-    public void setRegistrationNumber(String registrationNumber) {
-        this.registrationNumber = registrationNumber;
+    public String getModel() { 
+        return model; 
+    }
+    
+    public void setModel(String model) { 
+        this.model = model; 
     }
 
-    public String getMake() {
-        return make;
+    public String getVehicleType() { 
+        return vehicleType; 
+    }
+    
+    public void setVehicleType(String vehicleType) { 
+        this.vehicleType = vehicleType; 
     }
 
-    public void setMake(String make) {
-        this.make = make;
+    public Integer getYear() { 
+        return year; 
+    }
+    
+    public void setYear(Integer year) { 
+        this.year = year; 
     }
 
-    public String getModel() {
-        return model;
+    public Double getMileage() { 
+        return mileage; 
+    }
+    
+    public void setMileage(Double mileage) { 
+        this.mileage = mileage; 
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public String getStatus() { 
+        return status; 
+    }
+    
+    public void setStatus(String status) { 
+        this.status = status; 
     }
 
-    public String getVehicleType() {
-        return vehicleType;
+    public List<TrackingEvent> getTrackingEvents() { 
+        return trackingEvents; 
     }
-
-    public void setVehicleType(String vehicleType) {
-        this.vehicleType = vehicleType;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
-    }
-
-    public Integer getMileage() {
-        return mileage;
-    }
-
-    public void setMileage(Integer mileage) {
-        this.mileage = mileage;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public List<TrackingEvent> getTrackingEvents() {
-        return trackingEvents;
-    }
-
-    public void setTrackingEvents(List<TrackingEvent> trackingEvents) {
-        this.trackingEvents = trackingEvents;
+    
+    public void setTrackingEvents(List<TrackingEvent> trackingEvents) { 
+        this.trackingEvents = trackingEvents; 
     }
 }

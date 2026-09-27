@@ -1,47 +1,120 @@
 package com.securex.fleetcore.service;
 
+import com.securex.fleetcore.entity.DispatchJob;
+import com.securex.fleetcore.entity.Parcel;
+import com.securex.fleetcore.entity.Vehicle;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.logging.Logger;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 public class RouteOptimizationService {
 
-    private static final Logger LOGGER = Logger.getLogger(RouteOptimizationService.class.getName());
-    private static final String GMPRO_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
-    private static final String GMPRO_API_KEY = System.getenv("GOOGLE_MAPS_API_KEY");
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    // Hardcoded depot coordinates (e.g., Nelspruit Warehouse)
+    private static final double DEPOT_LAT = -25.4753;
+    private static final double DEPOT_LNG = 30.9694;
+    private static final double DEFAULT_VEHICLE_CAPACITY_KG = 1000.0; // 1 Ton fallback
 
-    public String optimizeRoute(String originJson, String destinationJson, String waypointsJson) {
-        // Construct the payload required by Google Maps Routes API
-        String requestBody = String.format(
-            "{ \"origin\": %s, \"destination\": %s, \"intermediates\": %s, \"travelMode\": \"DRIVE\" }", 
-            originJson, destinationJson, waypointsJson
-        );
+    @Transactional
+    public List<DispatchJob> optimizeAndDispatch() {
+        // 1. Fetch unassigned parcels and available vehicles
+        List<Parcel> unassignedParcels = entityManager.createQuery(
+                "SELECT p FROM Parcel p WHERE p.dispatchJob IS NULL AND p.latitude IS NOT NULL", Parcel.class)
+                .getResultList();
 
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(GMPRO_URL))
-                    .header("Content-Type", "application/json")
-                    .header("X-Goog-Api-Key", GMPRO_API_KEY)
-                    .header("X-Goog-FieldMask", "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
+        List<Vehicle> availableVehicles = entityManager.createQuery(
+                "SELECT v FROM Vehicle v", Vehicle.class) // Simplified: grab all vehicles
+                .getResultList();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        List<DispatchJob> createdJobs = new ArrayList<>();
+
+        // 2. Load Balancing (Greedy Bin Packing)
+        for (Vehicle vehicle : availableVehicles) {
+            if (unassignedParcels.isEmpty()) break;
+
+            DispatchJob job = new DispatchJob();
+            job.setVehicle(vehicle);
+            job.setStatus("SCHEDULED");
             
-            if (response.statusCode() == 200) {
-                return response.body();
-            } else {
-                LOGGER.warning("Route optimization failed. HTTP Status: " + response.statusCode() + " Body: " + response.body());
+            entityManager.persist(job);
+            entityManager.flush(); // Forces the insert and ID generation immediately to prevent constraint errors
+
+            double currentLoad = 0.0;
+            List<Parcel> assignedToVehicle = new ArrayList<>();
+
+            // Assign parcels until capacity is reached
+            for (int i = 0; i < unassignedParcels.size(); i++) {
+                Parcel p = unassignedParcels.get(i);
+                double weight = p.getWeightKg() != null ? p.getWeightKg() : 0.0;
+
+                if (currentLoad + weight <= DEFAULT_VEHICLE_CAPACITY_KG) {
+                    currentLoad += weight;
+                    p.setDispatchJob(job);
+                    assignedToVehicle.add(p);
+                    unassignedParcels.remove(i);
+                    i--; // Adjust index after removal
+                }
             }
-        } catch (Exception e) {
-            LOGGER.severe("Error calling Google Maps API: " + e.getMessage());
+
+            // 3. Nearest Neighbor Routing
+            List<Parcel> optimizedRoute = calculateNearestNeighborRoute(assignedToVehicle);
+            
+            // Assign the sorted parcels to the job
+            job.setParcels(optimizedRoute);
+            createdJobs.add(job);
         }
-        return null;
+
+        return createdJobs;
+    }
+
+    private List<Parcel> calculateNearestNeighborRoute(List<Parcel> parcels) {
+        List<Parcel> unvisited = new ArrayList<>(parcels);
+        List<Parcel> route = new ArrayList<>();
+        
+        double currentLat = DEPOT_LAT;
+        double currentLng = DEPOT_LNG;
+
+        while (!unvisited.isEmpty()) {
+            Parcel nearest = null;
+            double shortestDistance = Double.MAX_VALUE;
+
+            for (Parcel candidate : unvisited) {
+                double distance = haversine(currentLat, currentLng, candidate.getLatitude(), candidate.getLongitude());
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    nearest = candidate;
+                }
+            }
+
+            if (nearest != null) {
+                route.add(nearest);
+                unvisited.remove(nearest);
+                currentLat = nearest.getLatitude();
+                currentLng = nearest.getLongitude();
+            }
+        }
+        return route;
+    }
+
+    // Mathematical formula to calculate exact distance between two coordinates on a sphere
+    private double haversine(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Earth radius in kilometers
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 }

@@ -1,61 +1,46 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.List;
 
 @Entity
-@Table(name = "dispatch_job")
+@Table(name = "dispatch_jobs")
 public class DispatchJob {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "job_id")
-    private Long jobId;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    private String status;
+
+    // Ignore the backward loop to vehicle
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver;
-
-    @NotNull
-    @Column(name = "dispatch_zone")
-    private String dispatchZone;
-
-    @NotNull
-    @Column(name = "dispatch_date")
-    private LocalDate dispatchDate;
-
-    @Column(name = "job_status")
-    private String jobStatus; // e.g., SCHEDULED, IN_TRANSIT, COMPLETED
-
-    @OneToMany(mappedBy = "dispatchJob", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "dispatchJob", cascade = CascadeType.ALL)
     private List<Parcel> parcels;
 
-    public DispatchJob() {}
+    // --- Getters and Setters ---
 
-    // Getters and Setters
-    public Long getJobId() { return jobId; }
-    public void setJobId(Long jobId) { this.jobId = jobId; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Vehicle getVehicle() { return vehicle; }
     public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
-
-    public Driver getDriver() { return driver; }
-    public void setDriver(Driver driver) { this.driver = driver; }
-
-    public String getDispatchZone() { return dispatchZone; }
-    public void setDispatchZone(String dispatchZone) { this.dispatchZone = dispatchZone; }
-
-    public LocalDate getDispatchDate() { return dispatchDate; }
-    public void setDispatchDate(LocalDate dispatchDate) { this.dispatchDate = dispatchDate; }
-
-    public String getJobStatus() { return jobStatus; }
-    public void setJobStatus(String jobStatus) { this.jobStatus = jobStatus; }
 
     public List<Parcel> getParcels() { return parcels; }
     public void setParcels(List<Parcel> parcels) { this.parcels = parcels; }

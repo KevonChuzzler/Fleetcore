@@ -1,9 +1,17 @@
 package com.securex.fleetcore.controller;
 
-import com.securex.fleetcore.dao.VehicleDAO;
 import com.securex.fleetcore.entity.Vehicle;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
@@ -13,50 +21,46 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class VehicleController {
 
-    @Inject
-    private VehicleDAO vehicleDAO;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @GET
     public List<Vehicle> getAllVehicles() {
-        return vehicleDAO.findAll(); // Retrieves and returns all vehicle records[cite: 1]
-    }
-
-    @GET
-    @Path("/{id}")
-    public Response getVehicleById(@PathParam("id") Long id) {
-        Vehicle vehicle = vehicleDAO.findById(id);
-        if (vehicle == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        return Response.ok(vehicle).build(); // Returns a specific vehicle's information and status[cite: 1]
+        return entityManager.createQuery("SELECT v FROM Vehicle v", Vehicle.class).getResultList();
     }
 
     @POST
-    public Response createVehicle(Vehicle vehicle) {
-        vehicleDAO.create(vehicle); // Adds a new vehicle to the database[cite: 1]
+    @Transactional
+    public Response addVehicle(Vehicle vehicle) {
+        entityManager.persist(vehicle);
         return Response.status(Response.Status.CREATED).entity(vehicle).build();
     }
 
     @PUT
     @Path("/{id}")
+    @Transactional
     public Response updateVehicle(@PathParam("id") Long id, Vehicle updatedVehicle) {
-        Vehicle existingVehicle = vehicleDAO.findById(id);
-        if (existingVehicle == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        Vehicle existing = entityManager.find(Vehicle.class, id);
+        if (existing == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Vehicle not found").build();
         }
-        updatedVehicle.setVehicleId(id);
-        vehicleDAO.update(updatedVehicle); // Updates existing vehicle information[cite: 1]
+        
+        // The fix: Changed setVehicleId to setId to match the entity
+        updatedVehicle.setId(id);
+        entityManager.merge(updatedVehicle);
+        
         return Response.ok(updatedVehicle).build();
     }
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     public Response deleteVehicle(@PathParam("id") Long id) {
-        Vehicle existingVehicle = vehicleDAO.findById(id);
-        if (existingVehicle == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+        Vehicle existing = entityManager.find(Vehicle.class, id);
+        if (existing != null) {
+            entityManager.remove(existing);
+            return Response.noContent().build();
         }
-        vehicleDAO.delete(id); // Deactivates or removes a vehicle[cite: 1]
-        return Response.noContent().build();
+        return Response.status(Response.Status.NOT_FOUND).entity("Vehicle not found").build();
     }
 }

@@ -1,62 +1,58 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "fuel_log")
+@Table(name = "fuel_logs")
 public class FuelLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "fuel_id")
-    private Long fuelId;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    private LocalDate date;
+    private Double liters;
+    private Double totalCost;
+    private Double odometerKm;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver;
+    @PrePersist
+    protected void onCreate() {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+    }
 
-    @NotNull
-    @Column(name = "fillup_date")
-    private LocalDate fillupDate;
+    // --- Getters and Setters ---
 
-    @NotNull
-    private Double liters;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    @NotNull
-    @Column(name = "total_cost")
-    private BigDecimal totalCost;
-
-    @Column(name = "odometer_reading")
-    private Integer odometerReading;
-
-    public FuelLog() {}
-
-    // Getters and Setters
-    public Long getFuelId() { return fuelId; }
-    public void setFuelId(Long fuelId) { this.fuelId = fuelId; }
-
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
-
-    public Driver getDriver() { return driver; }
-    public void setDriver(Driver driver) { this.driver = driver; }
-
-    public LocalDate getFillupDate() { return fillupDate; }
-    public void setFillupDate(LocalDate fillupDate) { this.fillupDate = fillupDate; }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
     public Double getLiters() { return liters; }
     public void setLiters(Double liters) { this.liters = liters; }
 
-    public BigDecimal getTotalCost() { return totalCost; }
-    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
+    public Double getTotalCost() { return totalCost; }
+    public void setTotalCost(Double totalCost) { this.totalCost = totalCost; }
 
-    public Integer getOdometerReading() { return odometerReading; }
-    public void setOdometerReading(Integer odometerReading) { this.odometerReading = odometerReading; }
+    public Double getOdometerKm() { return odometerKm; }
+    public void setOdometerKm(Double odometerKm) { this.odometerKm = odometerKm; }
+
+    public Vehicle getVehicle() { return vehicle; }
+    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
 }

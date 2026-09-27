@@ -1,31 +1,47 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import org.locationtech.jts.geom.Polygon;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "delivery_zone")
+@Table(name = "delivery_zones")
 public class DeliveryZone {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "zone_id")
-    private Long zoneId;
+    private Long id;
 
-    @Column(name = "zone_name", unique = true)
-    private String zoneName;
+    private String name;
 
-    @Column(columnDefinition = "geometry(Polygon,4326)")
-    private Polygon boundaries; 
-    
-    public DeliveryZone() {}
+    // Replaced JTS Polygon with a standard String (can store JSON coordinates or WKT text)
+    private String boundaryPolygon;
 
-    public Long getZoneId() { return zoneId; }
-    public void setZoneId(Long zoneId) { this.zoneId = zoneId; }
+    // --- Getters and Setters ---
 
-    public String getZoneName() { return zoneName; }
-    public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+    public Long getId() {
+        return id;
+    }
 
-    public Polygon getBoundaries() { return boundaries; }
-    public void setBoundaries(Polygon boundaries) { this.boundaries = boundaries; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBoundaryPolygon() {
+        return boundaryPolygon;
+    }
+
+    public void setBoundaryPolygon(String boundaryPolygon) {
+        this.boundaryPolygon = boundaryPolygon;
+    }
 }

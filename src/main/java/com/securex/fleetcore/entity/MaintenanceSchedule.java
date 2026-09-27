@@ -1,42 +1,50 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "MAINTENANCE_SCHEDULE")
+@Table(name = "maintenance_schedules")
 public class MaintenanceSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "schedule_id")
-    private Long scheduleId; // Stores Schedule ID[cite: 1]
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle; // Links to Vehicle ID[cite: 1]
+    private String taskName; // e.g., "10,000km Service", "Annual Roadworthy"
+    private LocalDate targetDate;
+    private Double targetOdometerKm;
+    private String status; // PENDING, COMPLETED, OVERDUE
 
-    @NotNull
-    @Column(name = "scheduled_date")
-    private LocalDate scheduledDate; // Stores Scheduled Date[cite: 1]
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
-    @NotNull
-    @Column(name = "service_type")
-    private String serviceType; // Stores Service Type[cite: 1]
+    // --- Getters and Setters ---
 
-    public MaintenanceSchedule() {
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getScheduleId() { return scheduleId; }
-    public void setScheduleId(Long scheduleId) { this.scheduleId = scheduleId; }
+    public String getTaskName() { return taskName; }
+    public void setTaskName(String taskName) { this.taskName = taskName; }
+
+    public LocalDate getTargetDate() { return targetDate; }
+    public void setTargetDate(LocalDate targetDate) { this.targetDate = targetDate; }
+
+    public Double getTargetOdometerKm() { return targetOdometerKm; }
+    public void setTargetOdometerKm(Double targetOdometerKm) { this.targetOdometerKm = targetOdometerKm; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Vehicle getVehicle() { return vehicle; }
     public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
-
-    public LocalDate getScheduledDate() { return scheduledDate; }
-    public void setScheduledDate(LocalDate scheduledDate) { this.scheduledDate = scheduledDate; }
-
-    public String getServiceType() { return serviceType; }
-    public void setServiceType(String serviceType) { this.serviceType = serviceType; }
 }

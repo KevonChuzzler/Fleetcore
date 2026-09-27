@@ -1,59 +1,62 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "maintenance_record")
+@Table(name = "maintenance_records")
 public class MaintenanceRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "maintenance_id")
-    private Long maintenanceId;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
-
-    @NotNull
-    @Column(name = "service_date")
+    private String serviceType; // e.g., ROUTINE_SERVICE, TIRE_REPLACEMENT, BRAKE_REPAIR
+    private String description;
+    private Double cost;
+    private Double odometerKm;
     private LocalDate serviceDate;
 
-    private String description;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
-    @Column(name = "parts_used")
-    private String partsUsed;
+    @PrePersist
+    protected void onCreate() {
+        if (serviceDate == null) {
+            serviceDate = LocalDate.now();
+        }
+    }
 
-    @NotNull
-    private BigDecimal cost;
+    // --- Getters and Setters ---
 
-    @Column(name = "maintenance_status")
-    private String maintenanceStatus; // SCHEDULED, IN_PROGRESS, COMPLETED
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public MaintenanceRecord() {}
-
-    // Getters and Setters
-    public Long getMaintenanceId() { return maintenanceId; }
-    public void setMaintenanceId(Long maintenanceId) { this.maintenanceId = maintenanceId; }
-
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
-
-    public LocalDate getServiceDate() { return serviceDate; }
-    public void setServiceDate(LocalDate serviceDate) { this.serviceDate = serviceDate; }
+    public String getServiceType() { return serviceType; }
+    public void setServiceType(String serviceType) { this.serviceType = serviceType; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public String getPartsUsed() { return partsUsed; }
-    public void setPartsUsed(String partsUsed) { this.partsUsed = partsUsed; }
+    public Double getCost() { return cost; }
+    public void setCost(Double cost) { this.cost = cost; }
 
-    public BigDecimal getCost() { return cost; }
-    public void setCost(BigDecimal cost) { this.cost = cost; }
+    public Double getOdometerKm() { return odometerKm; }
+    public void setOdometerKm(Double odometerKm) { this.odometerKm = odometerKm; }
 
-    public String getMaintenanceStatus() { return maintenanceStatus; }
-    public void setMaintenanceStatus(String maintenanceStatus) { this.maintenanceStatus = maintenanceStatus; }
+    public LocalDate getServiceDate() { return serviceDate; }
+    public void setServiceDate(LocalDate serviceDate) { this.serviceDate = serviceDate; }
+
+    public Vehicle getVehicle() { return vehicle; }
+    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
 }

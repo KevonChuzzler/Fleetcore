@@ -1,39 +1,37 @@
 package com.securex.fleetcore.controller;
 
-import com.securex.fleetcore.entity.VehicleAssignment;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
+import com.securex.fleetcore.entity.DispatchJob;
+import com.securex.fleetcore.service.RouteOptimizationService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 
-@Path("/assignments")
+@Path("/dispatch")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@RequestScoped
 public class AssignmentController {
 
-    @PersistenceContext(unitName = "FleetcorePU")
-    private EntityManager em;
-
-    @GET
-    public List<VehicleAssignment> getAllAssignments() {
-        return em.createQuery("SELECT a FROM VehicleAssignment a", VehicleAssignment.class).getResultList();
-    }
+    @Inject
+    private RouteOptimizationService routeOptimizer;
 
     @POST
-    @Transactional
-    public Response createAssignment(VehicleAssignment assignment) {
+    @Path("/optimize")
+    public Response runDailyOptimization() {
         try {
-            em.persist(assignment);
-            return Response.status(Response.Status.CREATED).entity(assignment).build();
+            List<DispatchJob> generatedJobs = routeOptimizer.optimizeAndDispatch();
+            
+            if (generatedJobs.isEmpty()) {
+                return Response.ok("No unassigned parcels or available vehicles found.").build();
+            }
+            
+            return Response.ok(generatedJobs).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"error\":\"Failed to create assignment: " + e.getMessage() + "\"}")
-                    .build();
+            e.printStackTrace();
+            return Response.serverError().entity(e.getMessage()).build();
         }
     }
 }
