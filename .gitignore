@@ -10,7 +10,11 @@ target/
 .vscode/
 
 # Environment variables
-.envtarget/
+.env
+
+# IntelliJ IDEA
 .idea/
 *.iml
 .vscode/
+
+src/main/resources/META-INF/microprofile-config.properties

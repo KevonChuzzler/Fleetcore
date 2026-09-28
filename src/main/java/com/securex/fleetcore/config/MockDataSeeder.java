@@ -4,6 +4,7 @@ import com.securex.fleetcore.entity.Driver;
 import com.securex.fleetcore.entity.FuelLog;
 import com.securex.fleetcore.entity.MaintenanceRecord;
 import com.securex.fleetcore.entity.Parcel;
+import com.securex.fleetcore.entity.TripExpense;
 import com.securex.fleetcore.entity.Vehicle;
 import jakarta.annotation.PostConstruct;
 import jakarta.ejb.Singleton;
@@ -12,124 +13,154 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Singleton
 @Startup
 public class MockDataSeeder {
 
     @PersistenceContext
-    private EntityManager entityManager;
+    private EntityManager em;
 
     @PostConstruct
     @Transactional
     public void seedDatabase() {
-        Long vehicleCount = entityManager.createQuery("SELECT COUNT(v) FROM Vehicle v", Long.class).getSingleResult();
-        
+        Long vehicleCount = em.createQuery("SELECT COUNT(v) FROM Vehicle v", Long.class).getSingleResult();
         if (vehicleCount > 0) {
-            System.out.println("====== MockDataSeeder: Database already populated. Skipping seeding. ======");
-            return;
+            return; // Database already seeded
         }
 
-        System.out.println("====== MockDataSeeder: Injecting heavy fleet and drivers... ======");
+        Random rand = new Random();
+        List<Vehicle> persistedVehicles = new ArrayList<>();
 
-        // 1. Create 18 Drivers
-        String[] firstNames = {"Sipho", "Thabo", "Johan", "Pieter", "Sibusiso", "Bongani", "Lungile", "Willem", "David", "Jaco", "Kagiso", "Lebohang", "Mandla", "Nathi", "Oupa", "Quinton", "Ruan", "Tebogo"};
-        String[] lastNames = {"Nkosi", "Dlamini", "Botha", "Van Der Merwe", "Ndlovu", "Khumalo", "Mokoena", "Smit", "Jones", "Venter", "Mahlangu", "Modise", "Zwane", "Phiri", "Baloyi", "Naidoo", "Pretorius", "Mthembu"};
+        // 1. Seed 18 Drivers
+        String[] firstNames = {"Sipho", "Johan", "Thabo", "Pieter", "Musa", "Bongani", "Willem", "Jaco", "Sibusiso", "Kabelo", "Lunga", "Riaan", "Dirk", "Mandla", "Tshepo", "Anton", "Heinrich", "Vusi"};
+        String[] lastNames = {"Nkosi", "van der Merwe", "Mokoena", "de Klerk", "Dlamini", "Zwane", "Botha", "Fourie", "Ndlovu", "Molefe", "Khumalo", "Pretorius", "Coetzee", "Mahlangu", "Morake", "Smit", "Meyer", "Vilakazi"};
         
-        List<Driver> drivers = new ArrayList<>();
         for (int i = 0; i < 18; i++) {
             Driver d = new Driver();
             d.setFirstName(firstNames[i]);
             d.setLastName(lastNames[i]);
-            d.setLicenseNumber("ZA" + (900000 + i));
-            d.setLicenseExpiryDate(LocalDate.now().plusYears(1).plusMonths(i));
-            d.setContactNumber("08255500" + String.format("%02d", i));
-            d.setStatus(i % 5 == 0 ? "ON_LEAVE" : "ACTIVE"); // Mix of Active and On Leave
-            entityManager.persist(d);
-            drivers.add(d);
+            d.setLicenseNumber("ZA-" + (100000 + rand.nextInt(899999)));
+            d.setContactNumber("0" + (70 + rand.nextInt(14)) + rand.nextInt(10000000));
+            d.setLicenseExpiry(LocalDate.now().plusMonths(rand.nextInt(36) + 6));
+            d.setStatus(i % 5 == 0 ? "ON_LEAVE" : "ACTIVE");
+            em.persist(d);
         }
 
-        List<Vehicle> fleet = new ArrayList<>();
-        String[] statuses = {"AVAILABLE", "IN_TRANSIT", "MAINTENANCE", "AVAILABLE"};
+        // 2. Seed 22 Vehicles & Placement Coordinates
+        String[] models = {
+            "Axor", "Axor", "Axor", "Axor", "Axor", "Axor", "Axor", "Axor",
+            "R500", "R500", "R500", "R500", "R500", "R500", "R500", "R500",
+            "Hilux", "Hilux", "Hilux", "Auris", "Auris", "Auris"
+        };
+        String[] makes = {
+            "Mercedes", "Mercedes", "Mercedes", "Mercedes", "Mercedes", "Mercedes", "Mercedes", "Mercedes",
+            "Scania", "Scania", "Scania", "Scania", "Scania", "Scania", "Scania", "Scania",
+            "Toyota", "Toyota", "Toyota", "Toyota", "Toyota", "Toyota"
+        };
 
-        // 2. Create 8x Mercedes Axor Trucks
-        for (int i = 0; i < 8; i++) {
-            fleet.add(createVehicle("Mercedes-Benz", "Axor", "TRUCK", "AXR-" + (100 + i) + "-MP", statuses[i % 4]));
+        // Exact Depot coordinates
+        double depotLat = -25.462288460579988;
+        double depotLng = 30.984694233996766;
+
+        // Hardcoded real-world road coordinates in Mbombela (R40, N4, etc.)
+        double[][] roadCoords = {
+            {-25.4580, 30.9805}, {-25.4675, 30.9950}, {-25.4740, 30.9780},
+            {-25.4500, 30.9820}, {-25.4850, 30.9700}, {-25.4610, 30.9880},
+            {-25.4712, 30.9910}, {-25.4555, 30.9755}, {-25.4800, 30.9650},
+            {-25.4480, 30.9850}, {-25.4650, 31.0000}, {-25.4520, 30.9790},
+            {-25.4600, 30.9920}, {-25.4750, 30.9850}, {-25.4680, 30.9720}
+        };
+
+        int aurisAtDepot = 0;
+        int hiluxAtDepot = 0;
+
+        for (int i = 0; i < 22; i++) {
+            Vehicle v = new Vehicle();
+            v.setMake(makes[i]);
+            v.setModel(models[i]);
+            v.setRegistrationNumber(String.format("FCT-%03d-MP", i + 1));
+            v.setVehicleType(makes[i].equals("Toyota") ? "LIGHT_VEHICLE" : "TRUCK");
+
+            // Hold exactly 1 Auris and 2 Hiluxes at the depot
+            boolean keepAtDepot = false;
+            if (models[i].equals("Auris") && aurisAtDepot < 1) {
+                keepAtDepot = true;
+                aurisAtDepot++;
+            } else if (models[i].equals("Hilux") && hiluxAtDepot < 2) {
+                keepAtDepot = true;
+                hiluxAtDepot++;
+            }
+
+            if (keepAtDepot) {
+                v.setLatitude(depotLat);
+                v.setLongitude(depotLng);
+                v.setStatus("AVAILABLE");
+            } else {
+                v.setLatitude(roadCoords[i % roadCoords.length][0]);
+                v.setLongitude(roadCoords[i % roadCoords.length][1]);
+                v.setStatus(i % 6 == 0 ? "MAINTENANCE" : "IN_TRANSIT");
+            }
+            em.persist(v);
+            persistedVehicles.add(v);
         }
 
-        // 3. Create 4x Scania R560 Trucks
-        for (int i = 0; i < 4; i++) {
-            fleet.add(createVehicle("Scania", "R560", "TRUCK", "R560-" + (100 + i) + "-MP", statuses[(i + 1) % 4]));
+        // 3. Seed Analytics & Financial Data
+        for (Vehicle v : persistedVehicles) {
+            for (int i = 0; i < 3; i++) {
+                FuelLog fuel = new FuelLog();
+                fuel.setVehicle(v);
+                double liters = 50.0 + (rand.nextDouble() * 300.0);
+                fuel.setLiters(liters);
+                fuel.setCost(liters * 23.50);
+                fuel.setTotalCost(liters * 23.50);
+                fuel.setOdometerKm(15000.0 + rand.nextInt(5000));
+                fuel.setTimestamp(LocalDateTime.now().minusDays(rand.nextInt(30)));
+                em.persist(fuel);
+            }
+
+            for (int i = 0; i < 2; i++) {
+                TripExpense exp = new TripExpense();
+                exp.setVehicle(v);
+                exp.setDescription(i % 2 == 0 ? "N4 Nkomazi Toll Plaza" : "Overnight Driver Allowance");
+                exp.setCategory(i % 2 == 0 ? "TOLL" : "ALLOWANCE");
+                exp.setAmount(120.0 + rand.nextInt(400));
+                exp.setTimestamp(LocalDateTime.now().minusDays(rand.nextInt(30)));
+                em.persist(exp);
+            }
+
+            MaintenanceRecord maint = new MaintenanceRecord();
+            maint.setVehicle(v);
+            maint.setDescription("Scheduled 10,000km Major Service & Brake Pad Replacement");
+            maint.setServiceType("ROUTINE");
+            maint.setOdometerKm(20000.0 + rand.nextInt(5000));
+            maint.setCost(4500.0 + rand.nextInt(15000));
+            maint.setDate(LocalDate.now().minusDays(rand.nextInt(60)));
+            em.persist(maint);
         }
 
-        // 4. Create 4x Scania G500 Trucks
-        for (int i = 0; i < 4; i++) {
-            fleet.add(createVehicle("Scania", "G500", "TRUCK", "G500-" + (100 + i) + "-MP", statuses[(i + 2) % 4]));
-        }
-
-        // 5. Create 4x Toyota Hilux 2.4 GD-6 (Small Vehicles)
-        for (int i = 0; i < 4; i++) {
-            fleet.add(createVehicle("Toyota", "Hilux 2.4 GD-6", "LIGHT_VEHICLE", "HLX-" + (100 + i) + "-MP", statuses[i % 4]));
-        }
-
-        // 6. Create 2x Toyota Auris (Small Vehicles)
-        for (int i = 0; i < 2; i++) {
-            fleet.add(createVehicle("Toyota", "Auris", "LIGHT_VEHICLE", "AUR-" + (100 + i) + "-MP", "AVAILABLE"));
-        }
-
-        // 7. Assign the 18 drivers to the first 18 vehicles (leaving 4 vehicles unassigned)
-        for (int i = 0; i < 18; i++) {
-            Vehicle v = fleet.get(i);
-            v.setDriver(drivers.get(i));
-            entityManager.persist(v);
-        }
+        // 4. Seed 15 PENDING Parcels 
+        String[] clients = {"Makro Nelspruit", "SPAR White River", "Kruger National Park", "BuildIt Malelane", "Barberton Mines", "Hazyview Mall", "Boulders Lodge"};
+        String[] addresses = {
+            "12 Brown St, Nelspruit", "Chief Albert Luthuli St, White River", 
+            "Paul Kruger Gate, Skukuza", "Air St, Malelane", 
+            "Sheba Rd, Barberton", "R40 Main Rd, Hazyview"
+        };
         
-        // Persist the remaining unassigned vehicles
-        for (int i = 18; i < fleet.size(); i++) {
-            entityManager.persist(fleet.get(i));
-        }
-
-        // 8. Create some Mock Parcels for testing the routing engine
-        String[] clients = {"Acme Corp", "Global Tech", "Builders Warehouse", "Takealot Hub"};
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 15; i++) {
             Parcel p = new Parcel();
-            p.setClientName(clients[i % clients.length]);
-            p.setDeliveryAddress("Delivery Address " + i + ", Nelspruit");
-            p.setWeightKg(25.0 + (i * 10)); // Heavy packages for trucks
-            entityManager.persist(p);
+            p.setClientName(clients[rand.nextInt(clients.length)]);
+            p.setDeliveryAddress(addresses[rand.nextInt(addresses.length)]);
+            p.setWeightKg(15.5 + rand.nextDouble() * 500.0);
+            p.setStatus("PENDING");
+            // Scatter around the new depot coordinates
+            p.setLatitude(depotLat + (rand.nextDouble() * 0.4 - 0.2));
+            p.setLongitude(depotLng + (rand.nextDouble() * 0.4 - 0.2));
+            em.persist(p);
         }
-
-        // 9. Add some Analytics Data to Vehicle 1 (Mercedes Axor) for testing
-        FuelLog fuelLog = new FuelLog();
-        fuelLog.setVehicle(fleet.get(0));
-        fuelLog.setLiters(250.0);
-        fuelLog.setTotalCost(5800.00);
-        fuelLog.setOdometerKm(125000.0);
-        fuelLog.setDate(LocalDate.now());
-        entityManager.persist(fuelLog);
-
-        MaintenanceRecord maintenance = new MaintenanceRecord();
-        maintenance.setVehicle(fleet.get(0));
-        maintenance.setServiceType("ROUTINE_SERVICE");
-        maintenance.setDescription("100,000km Major Service");
-        maintenance.setCost(14500.00);
-        maintenance.setOdometerKm(120000.0);
-        maintenance.setServiceDate(LocalDate.now().minusDays(15));
-        entityManager.persist(maintenance);
-
-        System.out.println("====== MockDataSeeder: Fleet successfully injected! (" + fleet.size() + " Vehicles, " + drivers.size() + " Drivers) ======");
-    }
-
-    private Vehicle createVehicle(String make, String model, String type, String reg, String status) {
-        Vehicle v = new Vehicle();
-        v.setMake(make);
-        v.setModel(model);
-        v.setVehicleType(type);
-        v.setRegistrationNumber(reg);
-        v.setStatus(status);
-        v.setMileage(Math.random() * 200000); 
-        return v;
     }
 }

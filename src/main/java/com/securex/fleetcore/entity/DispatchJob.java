@@ -1,8 +1,6 @@
 package com.securex.fleetcore.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,10 +24,19 @@ public class DispatchJob {
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
-    @OneToMany(mappedBy = "dispatchJob", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    // For single parcel assignments
+    @ManyToOne
+    @JoinColumn(name = "parcel_id")
+    private Parcel parcel;
+
+    // For multi-parcel route optimization
+    @OneToMany
     private List<Parcel> parcels = new ArrayList<>();
 
-    private String status; // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+    private String status;
+    private LocalDateTime createdAt;
+    
+    // Missing time tracking fields
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -51,6 +58,14 @@ public class DispatchJob {
         this.vehicle = vehicle;
     }
 
+    public Parcel getParcel() {
+        return parcel;
+    }
+
+    public void setParcel(Parcel parcel) {
+        this.parcel = parcel;
+    }
+
     public List<Parcel> getParcels() {
         return parcels;
     }
@@ -65,6 +80,14 @@ public class DispatchJob {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public LocalDateTime getStartTime() {

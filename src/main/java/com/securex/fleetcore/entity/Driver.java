@@ -18,65 +18,63 @@ public class Driver {
     private String firstName;
     private String lastName;
     private String licenseNumber;
-    private LocalDate licenseExpiryDate;
     private String contactNumber;
-    private String status; // e.g., ACTIVE, INACTIVE, ON_LEAVE
+    private LocalDate licenseExpiry;
+    private String status;
 
-    // --- Getters and Setters ---
-
-    public Long getId() { 
-        return id; 
-    }
-    
-    public void setId(Long id) { 
-        this.id = id; 
+    public Long getId() {
+        return id;
     }
 
-    public String getFirstName() { 
-        return firstName; 
-    }
-    
-    public void setFirstName(String firstName) { 
-        this.firstName = firstName; 
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getLastName() { 
-        return lastName; 
-    }
-    
-    public void setLastName(String lastName) { 
-        this.lastName = lastName; 
+    public String getFirstName() {
+        return firstName;
     }
 
-    public String getLicenseNumber() { 
-        return licenseNumber; 
-    }
-    
-    public void setLicenseNumber(String licenseNumber) { 
-        this.licenseNumber = licenseNumber; 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public LocalDate getLicenseExpiryDate() { 
-        return licenseExpiryDate; 
-    }
-    
-    public void setLicenseExpiryDate(LocalDate licenseExpiryDate) { 
-        this.licenseExpiryDate = licenseExpiryDate; 
+    public String getLastName() {
+        return lastName;
     }
 
-    public String getContactNumber() { 
-        return contactNumber; 
-    }
-    
-    public void setContactNumber(String contactNumber) { 
-        this.contactNumber = contactNumber; 
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public String getStatus() { 
-        return status; 
+    public String getLicenseNumber() {
+        return licenseNumber;
     }
-    
-    public void setStatus(String status) { 
-        this.status = status; 
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
+    public LocalDate getLicenseExpiry() {
+        return licenseExpiry;
+    }
+
+    public void setLicenseExpiry(LocalDate licenseExpiry) {
+        this.licenseExpiry = licenseExpiry;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

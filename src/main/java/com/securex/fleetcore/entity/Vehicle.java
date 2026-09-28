@@ -1,16 +1,12 @@
 package com.securex.fleetcore.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.List;
 
 @Entity
 @Table(name = "vehicles")
@@ -20,101 +16,90 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String registrationNumber;
     private String make;
     private String model;
+    private String registrationNumber;
     private String vehicleType;
-    private Integer year;
-    private Double mileage;
     private String status;
+    
+    // Map coordinate fields
+    private Double latitude;
+    private Double longitude;
 
+    // Restored Driver relationship
     @ManyToOne
     @JoinColumn(name = "driver_id")
     private Driver driver;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
-    private List<TrackingEvent> trackingEvents;
-
-    // --- Getters and Setters ---
-
-    public Long getId() { 
-        return id; 
-    }
-    
-    public void setId(Long id) { 
-        this.id = id; 
+    public Long getId() {
+        return id;
     }
 
-    public String getRegistrationNumber() { 
-        return registrationNumber; 
-    }
-    
-    public void setRegistrationNumber(String registrationNumber) { 
-        this.registrationNumber = registrationNumber; 
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getMake() { 
-        return make; 
-    }
-    
-    public void setMake(String make) { 
-        this.make = make; 
+    public String getMake() {
+        return make;
     }
 
-    public String getModel() { 
-        return model; 
-    }
-    
-    public void setModel(String model) { 
-        this.model = model; 
+    public void setMake(String make) {
+        this.make = make;
     }
 
-    public String getVehicleType() { 
-        return vehicleType; 
-    }
-    
-    public void setVehicleType(String vehicleType) { 
-        this.vehicleType = vehicleType; 
+    public String getModel() {
+        return model;
     }
 
-    public Integer getYear() { 
-        return year; 
-    }
-    
-    public void setYear(Integer year) { 
-        this.year = year; 
+    public void setModel(String model) {
+        this.model = model;
     }
 
-    public Double getMileage() { 
-        return mileage; 
-    }
-    
-    public void setMileage(Double mileage) { 
-        this.mileage = mileage; 
+    public String getRegistrationNumber() {
+        return registrationNumber;
     }
 
-    public String getStatus() { 
-        return status; 
-    }
-    
-    public void setStatus(String status) { 
-        this.status = status; 
+    public void setRegistrationNumber(String registrationNumber) {
+        this.registrationNumber = registrationNumber;
     }
 
-    public Driver getDriver() { 
-        return driver; 
-    }
-    
-    public void setDriver(Driver driver) { 
-        this.driver = driver; 
+    public String getVehicleType() {
+        return vehicleType;
     }
 
-    public List<TrackingEvent> getTrackingEvents() { 
-        return trackingEvents; 
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
     }
-    
-    public void setTrackingEvents(List<TrackingEvent> trackingEvents) { 
-        this.trackingEvents = trackingEvents; 
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Driver getDriver() {
+        return driver;
+    }
+
+    public void setDriver(Driver driver) {
+        this.driver = driver;
     }
 }
